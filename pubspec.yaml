@@ -1,6 +1,6 @@
 name: facelivenessdetection
 description: "A real-time facial verification feature using Google ML Kit for liveliness detection. It ensures user interaction through smiling, blinking, and head movements. Features include face detection, dynamic feedback, a countdown timer, and customizable UI—ideal for secure authentication and anti-spoofing verification. "
-version: 0.0.2
+version: 0.0.3
 homepage: https://github.com/RoshanKarki007/facelivenessdetection
 
 environment:
