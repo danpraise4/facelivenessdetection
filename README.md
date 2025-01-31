@@ -5,7 +5,7 @@ A real-time facial verification feature using Google ML Kit for liveliness detec
 ![image](https://github.com/user-attachments/assets/eb0ca715-27f8-4aa5-9e23-fd11825e8960)
 ![image](https://github.com/user-attachments/assets/5f6729b3-8ec8-4d2a-b728-bcbb299379ae)
 
-'''dart
+```dart
   Widget build(BuildContext context) {
     return FaceDetectorView(
         onSuccessValidation: (validated) {},
@@ -89,4 +89,4 @@ String getHintText(Rulesets state) {
   return hint_;
 }
 
-'''
+```
