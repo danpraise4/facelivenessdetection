@@ -21,6 +21,7 @@ class FaceDetectorView extends StatefulWidget {
       required bool hasFace})? onChildren;
   final int totalDots;
   final double dotRadius;
+  final Color? backgroundColor;
   const FaceDetectorView(
       {super.key,
       required this.onRulesetCompleted,
@@ -38,6 +39,7 @@ class FaceDetectorView extends StatefulWidget {
       this.totalDots = 60,
       this.dotRadius = 3,
       required this.onSuccessValidation,
+      this.backgroundColor,
       this.cameraSize = const Size(200, 200)})
       : assert(ruleset.length != 0, 'Ruleset cannot be empty');
 
@@ -87,7 +89,7 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.transparent,
+      color: widget.backgroundColor ?? Colors.transparent,
       shadowColor: Colors.transparent,
       elevation: 0,
       surfaceTintColor: Colors.transparent,
