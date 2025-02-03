@@ -15,14 +15,16 @@ class FaceDetectorView extends StatefulWidget {
   final List<Rulesets> ruleset;
   final Color activeProgressColor;
   final Color progressColor;
-  final List<Widget> Function(
+
+  final Widget Function(
       {required Rulesets state,
       required int countdown,
-      required bool hasFace})? onChildren;
-  final Widget Function(CameraController controller) onValidationDone;
+      required bool hasFace}) child;
+  final Widget Function(CameraController? controller) onValidationDone;
   final int totalDots;
   final double dotRadius;
   final Color? backgroundColor;
+  final EdgeInsetsGeometry? contextPadding;
   const FaceDetectorView(
       {super.key,
       required this.onRulesetCompleted,
@@ -35,13 +37,14 @@ class FaceDetectorView extends StatefulWidget {
         Rulesets.tiltUp,
         Rulesets.tiltDown
       ],
-      this.onChildren,
+      required this.child,
       this.progressColor = Colors.green,
       this.activeProgressColor = Colors.red,
       this.totalDots = 60,
       this.dotRadius = 3,
       this.onSuccessValidation,
       this.backgroundColor = Colors.white,
+      this.contextPadding,
       this.cameraSize = const Size(200, 200)})
       : assert(ruleset.length != 0, 'Ruleset cannot be empty');
 
@@ -91,83 +94,74 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: widget.backgroundColor ?? Colors.transparent,
-      shadowColor: Colors.transparent,
-      elevation: 0,
-      surfaceTintColor: Colors.transparent,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          SizedBox(height: kToolbarHeight),
-          ValueListenableBuilder(
-            valueListenable: _currentTest,
-            builder: (context, state, child) {
-              double targetProgress = state != null
-                  ? (widget.ruleset.indexOf(state) / widget.ruleset.length)
-                      .toDouble()
-                  : 1.0;
-              return TweenAnimationBuilder(
-                  duration: Duration(milliseconds: 500), // Animation speed
-                  tween: Tween<double>(begin: 0, end: targetProgress),
-                  builder: (context, animation, _) {
-                    return CustomPaint(
-                      painter: DottedCirclePainter(
-                          progress: animation,
-                          totalDots: widget.totalDots,
-                          dotRadius: widget.dotRadius),
-                      child: child,
-                    );
-                  });
-            },
-            child: Container(
-              height: widget.cameraSize.height,
-              width: widget.cameraSize.width,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-              ),
-              child: DetectorView(
-                onController: (controller_) => controller = controller_,
-                title: 'Face Detector',
-                text: _text,
-                onImage: _processImage,
-                initialCameraLensDirection: _cameraLensDirection,
-              ),
-            ),
-          ),
-          SizedBox(height: 4.5),
-          ValueListenableBuilder<Rulesets?>(
-              valueListenable: _currentTest,
-              builder: (context, state, child) {
-                if (state != null) {
-                  return Center(
-                    child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: widget.onChildren?.call(
-                                state: state,
-                                countdown: _debouncer!.timeLeft,
-                                hasFace: hasFace) ??
-                            []),
-                  );
-                } else {
-                  return Center(child: SizedBox.shrink());
-                }
-              }),
-          AnimatedBuilder(
-              animation: Listenable.merge([_currentTest, ruleset]),
-              builder: (context, child) {
-                if (_currentTest.value == null &&
-                    ruleset.value.isEmpty &&
-                    controller != null) {
-                  return Center(
-                      child: widget.onValidationDone.call(controller!));
-                } else {
-                  return SizedBox.shrink();
-                }
-              }),
-        ],
-      ),
-    );
+        color: widget.backgroundColor ?? Colors.transparent,
+        shadowColor: Colors.transparent,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        child: Container(
+            padding: widget.contextPadding ??
+                EdgeInsets.symmetric(horizontal: 22, vertical: 16),
+            width: double.infinity,
+            child: Column(mainAxisSize: MainAxisSize.max, children: [
+              ValueListenableBuilder(
+                  valueListenable: _currentTest,
+                  builder: (context, state, child) {
+                    double targetProgress = state != null
+                        ? (widget.ruleset.indexOf(state) /
+                                widget.ruleset.length)
+                            .toDouble()
+                        : 1.0;
+                    return TweenAnimationBuilder(
+                        duration:
+                            Duration(milliseconds: 500), // Animation speed
+                        tween: Tween<double>(begin: 0, end: targetProgress),
+                        builder: (context, animation, _) => CustomPaint(
+                            painter: DottedCirclePainter(
+                                progress: animation,
+                                totalDots: widget.totalDots,
+                                dotRadius: widget.dotRadius),
+                            child: child));
+                  },
+                  child: Container(
+                      height: widget.cameraSize.height,
+                      width: widget.cameraSize.width,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                      ),
+                      child: DetectorView(
+                          onController: (controller_) =>
+                              controller = controller_,
+                          title: 'Face Detector',
+                          text: _text,
+                          onImage: _processImage,
+                          initialCameraLensDirection: _cameraLensDirection))),
+              SizedBox(height: 5),
+              ValueListenableBuilder<Rulesets?>(
+                  valueListenable: _currentTest,
+                  builder: (context, state, child) {
+                    if (state != null) {
+                      return widget.child(
+                          state: state,
+                          countdown: _debouncer!.timeLeft,
+                          hasFace: hasFace);
+                    }
+                    return SizedBox.shrink();
+                  }),
+              AnimatedBuilder(
+                  animation: Listenable.merge([_currentTest, ruleset]),
+                  builder: (context, child) {
+                    if (_currentTest.value == null &&
+                        ruleset.value.isEmpty &&
+                        controller != null) {
+                      return Expanded(
+                          child: SizedBox(
+                              width: double.infinity,
+                              child: widget.onValidationDone(controller)));
+                    } else {
+                      return SizedBox.shrink();
+                    }
+                  })
+            ])));
   }
 
   Future<void> _processImage(InputImage inputImage) async {
