@@ -38,8 +38,7 @@ class FaceDetectorView extends StatefulWidget {
       this.totalDots = 60,
       this.dotRadius = 3,
       required this.onSuccessValidation,
-      this.cameraSize = const Size(200, 200)})
-      : assert(ruleset.length == 0, 'Ruleset cannot be empty');
+      this.cameraSize = const Size(200, 200)});
 
   @override
   State<FaceDetectorView> createState() => _FaceDetectorViewState();
