@@ -10,7 +10,7 @@ import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 
 class FaceDetectorView extends StatefulWidget {
   final Size cameraSize;
-  final Function(bool validated) onSuccessValidation;
+  final Function(bool validated)? onSuccessValidation;
   final void Function(Rulesets ruleset)? onRulesetCompleted;
   final List<Rulesets> ruleset;
   final Color activeProgressColor;
@@ -19,12 +19,14 @@ class FaceDetectorView extends StatefulWidget {
       {required Rulesets state,
       required int countdown,
       required bool hasFace})? onChildren;
+  final Widget Function(CameraController controller) onValidationDone;
   final int totalDots;
   final double dotRadius;
   final Color? backgroundColor;
   const FaceDetectorView(
       {super.key,
       required this.onRulesetCompleted,
+      required this.onValidationDone,
       this.ruleset = const [
         Rulesets.smiling,
         Rulesets.blink,
@@ -38,8 +40,8 @@ class FaceDetectorView extends StatefulWidget {
       this.activeProgressColor = Colors.red,
       this.totalDots = 60,
       this.dotRadius = 3,
-      required this.onSuccessValidation,
-      this.backgroundColor,
+      this.onSuccessValidation,
+      this.backgroundColor = Colors.white,
       this.cameraSize = const Size(200, 200)})
       : assert(ruleset.length != 0, 'Ruleset cannot be empty');
 
@@ -48,7 +50,7 @@ class FaceDetectorView extends StatefulWidget {
 }
 
 class _FaceDetectorViewState extends State<FaceDetectorView> {
-  List<Rulesets> ruleset = [];
+  ValueNotifier<List<Rulesets>> ruleset = ValueNotifier<List<Rulesets>>([]);
   final FaceDetector _faceDetector = FaceDetector(
     options: FaceDetectorOptions(
         enableContours: true,
@@ -75,8 +77,8 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
 
   @override
   void initState() {
-    ruleset = widget.ruleset.toList();
-    _currentTest = ValueNotifier<Rulesets?>(ruleset.first);
+    ruleset.value = widget.ruleset.toList();
+    _currentTest = ValueNotifier<Rulesets?>(ruleset.value.first);
     _debouncer = Debouncer(
         durationInSeconds: 5,
         onComplete: () =>
@@ -151,6 +153,18 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
                   return Center(child: SizedBox.shrink());
                 }
               }),
+          AnimatedBuilder(
+              animation: Listenable.merge([_currentTest, ruleset]),
+              builder: (context, child) {
+                if (_currentTest.value == null &&
+                    ruleset.value.isEmpty &&
+                    controller != null) {
+                  return Center(
+                      child: widget.onValidationDone.call(controller!));
+                } else {
+                  return SizedBox.shrink();
+                }
+              }),
         ],
       ),
     );
@@ -189,13 +203,14 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
   }
 
   startRandomizedTime(Face face) {
-    if (ruleset.isEmpty) {
-      widget.onSuccessValidation.call(true);
+    if (ruleset.value.isEmpty) {
+      widget.onSuccessValidation?.call(true);
       return;
     } else {
-      widget.onSuccessValidation.call(false);
+      widget.onSuccessValidation?.call(false);
     }
-    var currentRuleset = ruleset.removeAt(0);
+
+    var currentRuleset = ruleset.value.removeAt(0);
     bool isDetected = false;
     switch (currentRuleset) {
       case Rulesets.smiling:
@@ -218,10 +233,10 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
         break;
     }
     if (!isDetected) {
-      ruleset.insert(0, currentRuleset);
+      ruleset.value.insert(0, currentRuleset);
     } else {
-      if (ruleset.isNotEmpty) {
-        _currentTest.value = ruleset.first;
+      if (ruleset.value.isNotEmpty) {
+        _currentTest.value = ruleset.value.first;
         _debouncer?.start();
       } else {
         _currentTest.value = null;
