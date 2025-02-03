@@ -38,7 +38,8 @@ class FaceDetectorView extends StatefulWidget {
       this.totalDots = 60,
       this.dotRadius = 3,
       required this.onSuccessValidation,
-      this.cameraSize = const Size(200, 200)});
+      this.cameraSize = const Size(200, 200)})
+      : assert(ruleset.length != 0, 'Ruleset cannot be empty');
 
   @override
   State<FaceDetectorView> createState() => _FaceDetectorViewState();
@@ -85,64 +86,71 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SizedBox(height: kToolbarHeight),
-        ValueListenableBuilder(
-          valueListenable: _currentTest,
-          builder: (context, state, child) {
-            double targetProgress = state != null
-                ? (widget.ruleset.indexOf(state) / widget.ruleset.length)
-                    .toDouble()
-                : 1.0;
-            return TweenAnimationBuilder(
-                duration: Duration(milliseconds: 500), // Animation speed
-                tween: Tween<double>(begin: 0, end: targetProgress),
-                builder: (context, animation, _) {
-                  return CustomPaint(
-                    painter: DottedCirclePainter(
-                        progress: animation,
-                        totalDots: widget.totalDots,
-                        dotRadius: widget.dotRadius),
-                    child: child,
-                  );
-                });
-          },
-          child: Container(
-            height: widget.cameraSize.height,
-            width: widget.cameraSize.width,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-            ),
-            child: DetectorView(
-              onController: (controller_) => controller = controller_,
-              title: 'Face Detector',
-              text: _text,
-              onImage: _processImage,
-              initialCameraLensDirection: _cameraLensDirection,
-            ),
-          ),
-        ),
-        SizedBox(height: 4.5),
-        ValueListenableBuilder<Rulesets?>(
+    return Material(
+      color: Colors.transparent,
+      shadowColor: Colors.transparent,
+      elevation: 0,
+      surfaceTintColor: Colors.transparent,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SizedBox(height: kToolbarHeight),
+          ValueListenableBuilder(
             valueListenable: _currentTest,
             builder: (context, state, child) {
-              if (state != null) {
-                return Center(
-                  child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: widget.onChildren?.call(
-                              state: state,
-                              countdown: _debouncer!.timeLeft,
-                              hasFace: hasFace) ??
-                          []),
-                );
-              } else {
-                return Center(child: SizedBox.shrink());
-              }
-            }),
-      ],
+              double targetProgress = state != null
+                  ? (widget.ruleset.indexOf(state) / widget.ruleset.length)
+                      .toDouble()
+                  : 1.0;
+              return TweenAnimationBuilder(
+                  duration: Duration(milliseconds: 500), // Animation speed
+                  tween: Tween<double>(begin: 0, end: targetProgress),
+                  builder: (context, animation, _) {
+                    return CustomPaint(
+                      painter: DottedCirclePainter(
+                          progress: animation,
+                          totalDots: widget.totalDots,
+                          dotRadius: widget.dotRadius),
+                      child: child,
+                    );
+                  });
+            },
+            child: Container(
+              height: widget.cameraSize.height,
+              width: widget.cameraSize.width,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+              ),
+              child: DetectorView(
+                onController: (controller_) => controller = controller_,
+                title: 'Face Detector',
+                text: _text,
+                onImage: _processImage,
+                initialCameraLensDirection: _cameraLensDirection,
+              ),
+            ),
+          ),
+          SizedBox(height: 4.5),
+          ValueListenableBuilder<Rulesets?>(
+              valueListenable: _currentTest,
+              builder: (context, state, child) {
+                if (state != null) {
+                  return Center(
+                    child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: widget.onChildren?.call(
+                                state: state,
+                                countdown: _debouncer!.timeLeft,
+                                hasFace: hasFace) ??
+                            []),
+                  );
+                } else {
+                  return Center(child: SizedBox.shrink());
+                }
+              }),
+        ],
+      ),
     );
   }
 
