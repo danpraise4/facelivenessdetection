@@ -116,6 +116,7 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
                             Duration(milliseconds: 500), // Animation speed
                         tween: Tween<double>(begin: 0, end: targetProgress),
                         builder: (context, animation, _) => CustomPaint(
+                          
                             painter: DottedCirclePainter(
                                 progress: animation,
                                 totalDots: widget.totalDots,
@@ -129,6 +130,7 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
                         shape: BoxShape.circle,
                       ),
                       child: DetectorView(
+                          cameraSize: widget.cameraSize,
                           onController: (controller_) =>
                               controller = controller_,
                           title: 'Face Detector',

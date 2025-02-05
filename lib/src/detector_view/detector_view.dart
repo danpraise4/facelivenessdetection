@@ -8,16 +8,16 @@ class DetectorView extends StatefulWidget {
     super.key,
     required this.title,
     required this.onImage,
-    this.customPaint,
     this.text,
     this.initialCameraLensDirection = CameraLensDirection.back,
     this.onCameraFeedReady,
     this.onCameraLensDirectionChanged,
     this.onController,
+    this.cameraSize = const Size(200, 200),
   });
-
+  final Size cameraSize;
   final String title;
-  final CustomPaint? customPaint;
+
   final String? text;
   final Function(InputImage inputImage) onImage;
   final Function()? onCameraFeedReady;
@@ -33,8 +33,8 @@ class _DetectorViewState extends State<DetectorView> {
   @override
   Widget build(BuildContext context) {
     return CameraView(
+      cameraSize: widget.cameraSize,
       onController: widget.onController,
-      customPaint: widget.customPaint,
       onImage: (image) {
         widget.onImage.call(image);
       },

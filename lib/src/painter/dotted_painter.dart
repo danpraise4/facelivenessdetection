@@ -5,11 +5,15 @@ class DottedCirclePainter extends CustomPainter {
   final double progress;
   final int totalDots;
   final double dotRadius;
+  final Color? activeProgressColor;
+  final Color? progressColor;
 
   DottedCirclePainter({
     required this.progress,
     this.totalDots = 60,
     this.dotRadius = 3.0,
+    this.activeProgressColor,
+    this.progressColor,
   });
 
   @override
@@ -31,10 +35,10 @@ class DottedCirclePainter extends CustomPainter {
       double y = center.dy + radius * sin(currentAngle);
 
       if (i < greenDotsCount) {
-        dotPaint.color = Colors.green;
+        dotPaint.color = activeProgressColor ?? Colors.green;
         canvas.drawCircle(Offset(x, y), dotRadius + 1.5, dotPaint);
       } else {
-        dotPaint.color = Colors.red;
+        dotPaint.color = progressColor ?? Colors.red;
         canvas.drawCircle(Offset(x, y), dotRadius, dotPaint);
       }
 

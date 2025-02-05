@@ -5,17 +5,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class CameraView extends StatefulWidget {
-  const CameraView(
-      {super.key,
-      required this.customPaint,
-      required this.onImage,
-      this.onCameraFeedReady,
-      this.onDetectorViewModeChanged,
-      this.onCameraLensDirectionChanged,
-      this.initialCameraLensDirection = CameraLensDirection.back,
-      this.onController});
-
-  final CustomPaint? customPaint;
+  const CameraView({
+    super.key,
+    required this.onImage,
+    this.onCameraFeedReady,
+    this.onDetectorViewModeChanged,
+    this.onCameraLensDirectionChanged,
+    this.initialCameraLensDirection = CameraLensDirection.back,
+    this.onController,
+    this.cameraSize = const Size(200, 200),
+  });
+  final Size cameraSize;
   final Function(InputImage inputImage) onImage;
   final VoidCallback? onCameraFeedReady;
   final VoidCallback? onDetectorViewModeChanged;
@@ -36,6 +36,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+
     _initialize();
   }
 
@@ -73,11 +74,12 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
       return Container();
     }
     widget.onController?.call(_controller!);
+
     return SizedBox(
-      height: 200,
-      width: 200,
+      height: widget.cameraSize.height,
+      width: widget.cameraSize.width,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(200),
+        borderRadius: BorderRadius.circular(widget.cameraSize.width),
         child: FittedBox(
           fit: BoxFit.cover,
           child: SizedBox(
