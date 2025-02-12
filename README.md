@@ -10,6 +10,19 @@ A real-time facial verification feature using Google ML Kit for liveliness detec
 - **Handles countdown timers** before validation.
 - **Efficient state management** with rule tracking.
 
+## Setup 
+## iOS 
+Add two rows to the ios/Runner/Info.plist:
+
+**one with the key Privacy** - Camera Usage Description and a usage description.
+**and one with the key Privacy** - Microphone Usage Description and a usage description.
+**If editing Info.plist as text, add**:
+```dart
+ <key>NSCameraUsageDescription</key>
+ <string>your usage description here</string>
+ <key>NSMicrophoneUsageDescription</key>
+ <string>your usage description here</string>
+```
 ## Usage
 
 To use this widget, add it inside a Flutter screen:
