@@ -33,9 +33,7 @@ class __FaceDetectorState extends State<_FaceDetector> {
             log('Face verification is completed', name: 'Validation');
           },
           onValidationDone: (controller) {
-            return Container(
-              child: Text('Completed'),
-            );
+            return Text('Completed');
           },
           child: ({required countdown, required state, required hasFace}) =>
               Column(
