@@ -206,6 +206,18 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
         Platform.isAndroid && (format != InputImageFormat.nv21);
     if (image.planes.length != 1 && !shouldOverride) return null;
     final plane = image.planes.first;
+
+    if (Platform.isIOS) {
+      return InputImage.fromBytes(
+        bytes: image.planes[0].bytes, // Only use first plane for BGRA
+        metadata: InputImageMetadata(
+          size: Size(image.width.toDouble(), image.height.toDouble()),
+          rotation: rotation,
+          format: InputImageFormat.bgra8888,
+          bytesPerRow: image.planes[0].bytesPerRow,
+        ),
+      );
+    }
     return InputImage.fromBytes(
       bytes: shouldOverride ? convertYUV420ToNV21(image) : plane.bytes,
       metadata: InputImageMetadata(

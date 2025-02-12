@@ -221,10 +221,10 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
       case Rulesets.tiltDown:
         isDetected = _detectHeadTiltDown(face);
         break;
-      case Rulesets.toLeft:
+      case Rulesets.toRight:
         isDetected = _detectLeftHeadMovement(face);
         break;
-      case Rulesets.toRight:
+      case Rulesets.toLeft:
         isDetected = _detectRightHeadMovement(face);
         break;
     }
