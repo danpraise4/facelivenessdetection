@@ -5,10 +5,12 @@ import 'package:facelivenessdetection/src/detector_view/detector_view.dart';
 import 'package:facelivenessdetection/src/painter/dotted_painter.dart';
 import 'package:facelivenessdetection/src/rule_set/rule_set.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 
 class FaceDetectorView extends StatefulWidget {
+  final int pauseDurationInSeconds;
   final Size cameraSize;
   final Function(bool validated)? onSuccessValidation;
   final void Function(Rulesets ruleset)? onRulesetCompleted;
@@ -45,7 +47,8 @@ class FaceDetectorView extends StatefulWidget {
       this.onSuccessValidation,
       this.backgroundColor = Colors.white,
       this.contextPadding,
-      this.cameraSize = const Size(200, 200)})
+      this.cameraSize = const Size(200, 200),
+      this.pauseDurationInSeconds = 5})
       : assert(ruleset.length != 0, 'Ruleset cannot be empty');
 
   @override
@@ -83,7 +86,7 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
     ruleset.value = widget.ruleset.toList();
     _currentTest = ValueNotifier<Rulesets?>(ruleset.value.first);
     _debouncer = Debouncer(
-        durationInSeconds: 5,
+        durationInSeconds: widget.pauseDurationInSeconds,
         onComplete: () =>
             dev.log('Timer is completed', name: 'Photo verification timer'));
     _debouncer?.start();
@@ -116,8 +119,9 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
                             Duration(milliseconds: 500), // Animation speed
                         tween: Tween<double>(begin: 0, end: targetProgress),
                         builder: (context, animation, _) => CustomPaint(
-                          
                             painter: DottedCirclePainter(
+                                activeProgressColor: widget.activeProgressColor,
+                                progressColor: widget.progressColor,
                                 progress: animation,
                                 totalDots: widget.totalDots,
                                 dotRadius: widget.dotRadius),
@@ -221,10 +225,10 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
       case Rulesets.tiltDown:
         isDetected = _detectHeadTiltDown(face);
         break;
-      case Rulesets.toRight:
+      case Rulesets.toLeft:
         isDetected = _detectLeftHeadMovement(face);
         break;
-      case Rulesets.toLeft:
+      case Rulesets.toRight:
         isDetected = _detectRightHeadMovement(face);
         break;
     }
@@ -238,6 +242,7 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
         _currentTest.value = null;
         _debouncer?.stop();
       }
+      HapticFeedback.vibrate();
     }
   }
 
