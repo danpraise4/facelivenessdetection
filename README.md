@@ -12,6 +12,11 @@ A real-time facial verification feature using Google ML Kit for liveliness detec
 
 ## Setup 
 ## iOS 
+# Uncomment this line to define a global platform for your project
+```dart
+platform :ios, '15.5.0'
+```
+
 Add two rows to the ios/Runner/Info.plist:
 
 **one with the key Privacy** - Camera Usage Description and a usage description.
