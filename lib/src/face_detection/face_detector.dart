@@ -1,4 +1,5 @@
 import 'dart:developer' as dev;
+import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:facelivenessdetection/src/debouncer/debouncer.dart';
 import 'package:facelivenessdetection/src/detector_view/detector_view.dart';
@@ -284,14 +285,17 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
 
   bool _detectHeadMovement(Face face, {bool left = true}) {
     final double? rotY = face.headEulerAngleY;
+
     if (rotY == null) return false;
+    final double adjustedRotY = Platform.isIOS ? -rotY : rotY;
+
     if (left) {
-      if (rotY < -40) {
+      if (adjustedRotY < -40) {
         widget.onRulesetCompleted?.call(Rulesets.toLeft);
         return true;
       }
     } else {
-      if (rotY > 40) {
+      if (adjustedRotY > 40) {
         widget.onRulesetCompleted?.call(Rulesets.toRight);
         return true;
       }
