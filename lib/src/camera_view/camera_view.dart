@@ -184,20 +184,20 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     final camera = _cameras[_cameraIndex];
     final sensorOrientation = camera.sensorOrientation;
     InputImageRotation? rotation;
-    if (Platform.isIOS) {
-      rotation = InputImageRotationValue.fromRawValue(sensorOrientation);
-    } else if (Platform.isAndroid) {
-      var rotationCompensation =
-          _orientations[_controller!.value.deviceOrientation];
-      if (rotationCompensation == null) return null;
-      if (camera.lensDirection == CameraLensDirection.front) {
-        rotationCompensation = (sensorOrientation + rotationCompensation) % 360;
-      } else {
-        rotationCompensation =
-            (sensorOrientation - rotationCompensation + 360) % 360;
-      }
-      rotation = InputImageRotationValue.fromRawValue(rotationCompensation);
+    // if (Platform.isIOS) {
+    //   rotation = InputImageRotationValue.fromRawValue(sensorOrientation);
+    // } else if (Platform.isAndroid) {
+    var rotationCompensation =
+        _orientations[_controller!.value.deviceOrientation];
+    if (rotationCompensation == null) return null;
+    if (camera.lensDirection == CameraLensDirection.front) {
+      rotationCompensation = (sensorOrientation + rotationCompensation) % 360;
+    } else {
+      rotationCompensation =
+          (sensorOrientation - rotationCompensation + 360) % 360;
     }
+    rotation = InputImageRotationValue.fromRawValue(rotationCompensation);
+    // }
     if (rotation == null) return null;
 
     final format = InputImageFormatValue.fromRawValue(image.format.raw);
