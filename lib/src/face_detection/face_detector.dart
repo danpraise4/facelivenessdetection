@@ -7,6 +7,8 @@ import 'package:facelivenessdetection/src/painter/dotted_painter.dart';
 import 'package:facelivenessdetection/src/rule_set/rule_set.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
 
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 
@@ -14,7 +16,7 @@ class FaceDetectorView extends StatefulWidget {
   final int pauseDurationInSeconds;
   final Size cameraSize;
   final Function(bool validated)? onSuccessValidation;
-  final void Function(Rulesets ruleset)? onRulesetCompleted;
+  final void Function(Rulesets ruleset, String? imageUrl)? onRulesetCompleted;
   final List<Rulesets> ruleset;
   final Color activeProgressColor;
   final Color progressColor;
@@ -74,6 +76,28 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
   Debouncer? _debouncer;
   CameraController? controller;
   bool hasFace = false;
+
+  /// Captures an image from the camera and saves it to temporary storage
+  Future<String?> _captureImage() async {
+    if (controller == null || !controller!.value.isInitialized) {
+      return null;
+    }
+
+    try {
+      final XFile imageFile = await controller!.takePicture();
+      final Directory tempDir = await getTemporaryDirectory();
+      final String fileName = 'face_capture_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final String filePath = path.join(tempDir.path, fileName);
+      
+      // Copy the image to our desired location
+      await imageFile.saveTo(filePath);
+      
+      return filePath;
+    } catch (e) {
+      dev.log('Error capturing image: $e', name: 'ImageCapture');
+      return null;
+    }
+  }
   @override
   void dispose() {
     _canProcess = false;
@@ -203,7 +227,7 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
     }
   }
 
-  startRandomizedTime(Face face) {
+  startRandomizedTime(Face face) async {
     if (ruleset.value.isEmpty) {
       widget.onSuccessValidation?.call(true);
       return;
@@ -236,6 +260,12 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
     if (!isDetected) {
       ruleset.value.insert(0, currentRuleset);
     } else {
+      // Capture image when ruleset is completed
+      String? imageUrl = await _captureImage();
+      
+      // Call the callback with both ruleset and image URL
+      widget.onRulesetCompleted?.call(currentRuleset, imageUrl);
+      
       if (ruleset.value.isNotEmpty) {
         _currentTest.value = ruleset.value.first;
         _debouncer?.start();
@@ -263,12 +293,10 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
       dev.log(rotX.toString(), name: 'Head Movement');
       if (rotX < -20) {
         // Adjust threshold if needed
-        widget.onRulesetCompleted?.call(Rulesets.tiltUp);
         return true;
       }
     } else {
       if (rotX > 20) {
-        widget.onRulesetCompleted?.call(Rulesets.tiltUp);
         return true;
       }
     }
@@ -291,12 +319,10 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
 
     if (left) {
       if (adjustedRotY < -40) {
-        widget.onRulesetCompleted?.call(Rulesets.toLeft);
         return true;
       }
     } else {
       if (adjustedRotY > 40) {
-        widget.onRulesetCompleted?.call(Rulesets.toRight);
         return true;
       }
     }
@@ -310,7 +336,6 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
     if (leftEyeOpenProb != null && rightEyeOpenProb != null) {
       if (leftEyeOpenProb < eyeOpenThreshold &&
           rightEyeOpenProb < eyeOpenThreshold) {
-        widget.onRulesetCompleted?.call(Rulesets.blink);
         return true;
       }
     }
@@ -321,10 +346,7 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
     if (face.smilingProbability != null) {
       final double? smileProb = face.smilingProbability;
       if ((smileProb ?? 0) > .5) {
-        if (widget.onRulesetCompleted != null) {
-          widget.onRulesetCompleted!(Rulesets.smiling);
-          return true;
-        }
+        return true;
       }
     }
     return false;

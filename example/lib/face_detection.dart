@@ -92,10 +92,11 @@ class __FaceDetectorState extends State<_FaceDetector> {
                   ]
                 ],
               ),
-          onRulesetCompleted: (ruleset) {
+          onRulesetCompleted: (ruleset, imageUrl) {
             if (!_completedRuleset.contains(ruleset)) {
               _completedRuleset.add(ruleset);
             }
+            log('Ruleset completed: $ruleset, Image URL: $imageUrl', name: 'RulesetCompletion');
           }),
     );
   }
