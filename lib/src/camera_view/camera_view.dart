@@ -99,10 +99,11 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
           imageFormatGroup: Platform.isAndroid
               ? ImageFormatGroup.nv21
               : ImageFormatGroup.bgra8888);
-      _controller?.initialize().then((_) {
+      _controller?.initialize().then((_) async {
         if (!mounted) {
           return;
         }
+         await _controller?.setFlashMode(FlashMode.off);
         _controller?.startImageStream(_processCameraImage).then((value) {
           if (widget.onCameraFeedReady != null) {
             widget.onCameraFeedReady!();
