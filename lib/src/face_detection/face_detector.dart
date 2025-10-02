@@ -128,9 +128,11 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
 
     widget.controller?.bind(
       onCapture: (Rulesets? rule) async {
+        if (_lastFace == null) {
+          throw StateError('No face detected. Please ensure a face is visible before capturing.');
+        }
         final Rulesets effectiveRule = rule ?? _currentTest.value ?? ruleset.value.first;
-        final Face? face = _lastFace;
-        final double accuracy = face != null ? _computeAccuracy(effectiveRule, face) : 0.0;
+        final double accuracy = _computeAccuracy(effectiveRule, _lastFace!);
         final String? imageUrl = await _captureImage();
         final result = FaceCaptureResult(
             rule: effectiveRule, imageUrl: imageUrl, accuracyPercentage: accuracy);
@@ -146,16 +148,19 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
         _currentTest.value = ruleset.value.first;
         _debouncer?.start();
         setState(() {});
+        
       },
       onPause: () {
         _paused = true;
         _debouncer?.stop();
+        setState(() {});
       },
       onContinue: () {
         _paused = false;
-        if (widget.autoCapture) {
+        if (widget.autoCapture && ruleset.value.isNotEmpty) {
           _debouncer?.start();
         }
+        setState(() {});
       },
       onGetImages: () => _results.toList(),
     );
@@ -249,7 +254,12 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
     final faces = await _faceDetector.processImage(inputImage);
     hasFace = faces.isNotEmpty;
     _lastFace = faces.isNotEmpty ? faces.first : null;
-    if (widget.autoCapture && !_paused && !(_debouncer?.isRunning ?? false)) handleRuleSet(faces);
+    
+    // Process rules regardless of autoCapture, but only auto-capture when enabled
+    if (!_paused && !(_debouncer?.isRunning ?? false)) {
+      handleRuleSet(faces);
+    }
+    
     if (inputImage.metadata?.size != null &&
         inputImage.metadata?.rotation != null) {
     } else {
@@ -305,17 +315,21 @@ class _FaceDetectorViewState extends State<FaceDetectorView> {
     if (!isDetected) {
       ruleset.value.insert(0, currentRuleset);
     } else {
-      // Capture image when ruleset is completed
-      String? imageUrl = await _captureImage();
-      final double accuracy = _computeAccuracy(currentRuleset, face);
-      _results.add(FaceCaptureResult(
-          rule: currentRuleset, imageUrl: imageUrl, accuracyPercentage: accuracy));
-      // Call the callback with both ruleset and image URL
-      widget.onRulesetCompleted?.call(currentRuleset, imageUrl);
+      // Only auto-capture when autoCapture is enabled
+      if (widget.autoCapture) {
+        String? imageUrl = await _captureImage();
+        final double accuracy = _computeAccuracy(currentRuleset, face);
+        _results.add(FaceCaptureResult(
+            rule: currentRuleset, imageUrl: imageUrl, accuracyPercentage: accuracy));
+        // Call the callback with both ruleset and image URL
+        widget.onRulesetCompleted?.call(currentRuleset, imageUrl);
+      }
       
       if (ruleset.value.isNotEmpty) {
         _currentTest.value = ruleset.value.first;
-        _debouncer?.start();
+        if (widget.autoCapture) {
+          _debouncer?.start();
+        }
       } else {
         _currentTest.value = null;
         _debouncer?.stop();
