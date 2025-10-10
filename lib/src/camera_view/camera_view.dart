@@ -161,10 +161,24 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
   }
 
   Future _stopLiveFeed() async {
-    await _controller?.stopImageStream();
-    await _controller?.dispose();
+  if (_controller != null) {
+    try {
+      // Check if controller is initialized before stopping image stream
+      if (_controller!.value.isInitialized) {
+        await _controller!.stopImageStream();
+      }
+    } catch (e) {
+      debugPrint('Error stopping image stream: $e');
+    }
+    
+    try {
+      await _controller!.dispose();
+    } catch (e) {
+      debugPrint('Error disposing camera controller: $e');
+    }
     _controller = null;
   }
+}
 
   void _processCameraImage(CameraImage image) {
     final inputImage = _inputImageFromCameraImage(image);
